@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+
+<title></title>
+
+<script src="Reproducible_Research_Assignment_1_files/jquery-1.11.0/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="Reproducible_Research_Assignment_1_files/bootstrap-3.3.1/css/bootstrap.min.css" rel="stylesheet" />
+<script src="Reproducible_Research_Assignment_1_files/bootstrap-3.3.1/js/bootstrap.min.js"></script>
+<script src="Reproducible_Research_Assignment_1_files/bootstrap-3.3.1/shim/html5shiv.min.js"></script>
+<script src="Reproducible_Research_Assignment_1_files/bootstrap-3.3.1/shim/respond.min.js"></script>
+
+<style type="text/css">code{white-space: pre;}</style>
+<link rel="stylesheet"
+      href="Reproducible_Research_Assignment_1_files/highlight/default.css"
+      type="text/css" />
+<script src="Reproducible_Research_Assignment_1_files/highlight/highlight.js"></script>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs && document.readyState && document.readyState === "complete") {
+   window.setTimeout(function() {
+      hljs.initHighlighting();
+   }, 0);
+}
+</script>
+
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img { 
+  max-width:100%; 
+  height: auto; 
+}
+</style>
+<div class="container-fluid main-container">
+
+
+
+
+<div id="reproducible-research-assignment-1" class="section level1">
+<h1>Reproducible Research Assignment 1</h1>
+</div>
+<div id="introduction" class="section level1">
+<h1>Introduction</h1>
+<p>The objective of this assignment is to analyze two months worth activity data stored a personal activity monitoring device in order to answer the following questions:</p>
+<ul>
+<li>What is the mean total number of steps taken per day?</li>
+<li>What is the average daily activity pattern?</li>
+<li>Are there differences in actity patterns between weekdays and weekends?</li>
+</ul>
+<p>Additionally, the missing data in the dataset will be quantified and cleansed.</p>
+<p>The data is sourced at:</p>
+<p><a href="http://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip">Activity Data</a></p>
+<div id="loading-libraries-reading-the-data" class="section level2">
+<h2>Loading libraries Reading the data</h2>
+<p>As a first step, we load the necessary libraries and read in the data.</p>
+<pre class="r"><code>library (dplyr)</code></pre>
+<pre><code>## 
+## Attaching package: &#39;dplyr&#39;
+## 
+## The following objects are masked from &#39;package:stats&#39;:
+## 
+##     filter, lag
+## 
+## The following objects are masked from &#39;package:base&#39;:
+## 
+##     intersect, setdiff, setequal, union</code></pre>
+<pre class="r"><code>library (lattice)
+
+temp &lt;-tempfile()
+
+      fileUrl &lt;- &quot;https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip&quot;
+      download.file(fileUrl,temp)
+      activity &lt;-read.csv(unz(temp,&quot;activity.csv&quot;,),
+      header = TRUE, sep =&quot;,&quot;,
+      colClasses = c(&quot;numeric&quot;,&quot;Date&quot;,&quot;numeric&quot;))
+      
+unlink(temp)</code></pre>
+</div>
+<div id="analyze-the-data-and-clean-the-data" class="section level2">
+<h2>Analyze the data and clean the data</h2>
+<p>Let us look at the structure of the dataframe and the number of invalid entries per variable.</p>
+<p>Furthermore, let us create a smaller dataset which purges the “NA” values from the original dataset.</p>
+<pre class="r"><code>str(activity)</code></pre>
+<pre><code>## &#39;data.frame&#39;:    17568 obs. of  3 variables:
+##  $ steps   : num  NA NA NA NA NA NA NA NA NA NA ...
+##  $ date    : Date, format: &quot;2012-10-01&quot; &quot;2012-10-01&quot; ...
+##  $ interval: num  0 5 10 15 20 25 30 35 40 45 ...</code></pre>
+<pre class="r"><code>nrow(activity[is.na(activity$steps),])</code></pre>
+<pre><code>## [1] 2304</code></pre>
+<pre class="r"><code>nrow(activity[is.na(activity$date),])</code></pre>
+<pre><code>## [1] 0</code></pre>
+<pre class="r"><code>nrow(activity[is.na(activity$interval),])</code></pre>
+<pre><code>## [1] 0</code></pre>
+<pre class="r"><code>activity_rem &lt;- activity[!is.na(activity$steps),]
+activity_na &lt;- activity[is.na(activity$steps),]</code></pre>
+</div>
+<div id="analysis-of-steps-per-day" class="section level2">
+<h2>Analysis of steps per day</h2>
+<p>In order to calculate the mean total steps, we need to summarize the steps per day. Then we can plot the steps per day in a histogram. Furthermore, we can calculate the mean and median steps per day.</p>
+<pre class="r"><code>Daily &lt;- summarise(group_by(activity_rem, date), Total = sum(steps))
+hist(Daily$Total, main = &quot;Total Number of Steps per Day&quot;, xlab = &quot;Steps&quot;)</code></pre>
+<p><img src="Reproducible_Research_Assignment_1_files/figure-html/Summarize%20steps%20per%20day-1.png" title="" alt="" width="672" /></p>
+<pre class="r"><code>##Calculate median and mean steps per day
+
+median(Daily$Total)</code></pre>
+<pre><code>## [1] 10765</code></pre>
+<pre class="r"><code>mean(Daily$Total)</code></pre>
+<pre><code>## [1] 10766.19</code></pre>
+</div>
+<div id="analyzing-average-daily-activity" class="section level2">
+<h2>Analyzing average daily activity</h2>
+<p>In order to analyze average activity patterns within a day, we average the steps taken in each 5 minute interval across all days. We can furthermore figure out the interval in which the maximum activity occured on average.</p>
+<pre class="r"><code>Bytime &lt;- summarise(group_by(activity_rem, interval), Average = mean(steps))
+
+##For graphing purposes, it is more informative to see time than minutes.
+##minutes will be calculated as decimals - e.g. 15 minutes = .25 hours
+
+    hours &lt;- Bytime$interval %/% 100
+    minutes &lt;- Bytime$interval %% 100
+
+Bytime$displaytime &lt;- hours + (minutes * 1/60)
+
+plot(Bytime$displaytime,Bytime$Average,
+     type = &quot;l&quot;,
+     main = &quot;Average Steps per Interval across all days&quot;,
+     xlab = &quot;Time (24 hour clock)&quot;,
+     ylab = &quot;Steps (average)&quot;)</code></pre>
+<p><img src="Reproducible_Research_Assignment_1_files/figure-html/Average%20steps%20per%20interval-1.png" title="" alt="" width="672" /></p>
+<pre class="r"><code>## We can also find the maximum average activity and the associated interval
+
+maxact &lt;- max(Bytime$Average)
+maxact</code></pre>
+<pre><code>## [1] 206.1698</code></pre>
+<pre class="r"><code>topinterval &lt;- Bytime[Bytime$Average == maxact,]
+topinterval</code></pre>
+<pre><code>## Source: local data frame [1 x 3]
+## 
+##   interval  Average displaytime
+##      (dbl)    (dbl)       (dbl)
+## 1      835 206.1698    8.583333</code></pre>
+<p>So we see that the maximum activity occured at the 8:35 interval.</p>
+</div>
+<div id="imputing-missing-values" class="section level2">
+<h2>Imputing missing values</h2>
+<p>As seen earlier on, there are a number of rows missing step data. There are different ways to approach this - we could substitute with zeroes, based on an assumption that the lack of data meant that 0 steps were walked. Another, more complex way to adjust for this is to take the average steps per interval which we have previously calculated and replace the missing values with this average. This is illustrated below.</p>
+<pre class="r"><code>##First we merge the data frame with the missing step counts with the 
+##dataframe with average steps per interval
+
+activity_na_merge &lt;- 
+  merge (activity_na, Bytime, by.x = &quot;interval&quot;, by.y = &quot;interval&quot;)
+
+##Now we can replace the steps with the averages and delete unneeded columns
+
+activity_na_merge$steps = activity_na_merge$Average
+activity_na_merge$Average &lt;- NULL
+activity_na_merge$displaytime &lt;- NULL
+
+#And finally we can create a new dataframe with the cleaned &quot;NA&quot; values
+#and add our calculated column for display of the time in the graph.
+
+clean_act &lt;- rbind(activity_rem, activity_na_merge)
+    hours &lt;- clean_act$interval %/% 100
+    minutes &lt;- clean_act$interval %% 100
+
+clean_act$displaytime &lt;- hours + (minutes * 1/60)</code></pre>
+</div>
+<div id="analyzing-the-dataset-with-imputed-missing-values" class="section level2">
+<h2>Analyzing the dataset with imputed missing values</h2>
+<p>We now plot another histogram of the dataset with missing values imputed and look at the mean and median steps per day.</p>
+<pre class="r"><code>#First we need to summarize the data again by interval
+
+Bytime2 &lt;- summarise(group_by(clean_act, displaytime), Average = mean(steps))
+
+plot(Bytime2$displaytime,Bytime2$Average,
+     type = &quot;l&quot;,
+     main = &quot;Average Steps per Interval across all days&quot;,
+     xlab = &quot;Time (24 hour clock)&quot;,
+     ylab = &quot;Steps (average)&quot;)</code></pre>
+<p><img src="Reproducible_Research_Assignment_1_files/figure-html/Plotting%20histogram%20with%20imputed%20values-1.png" title="" alt="" width="672" /></p>
+<pre class="r"><code>## Let&#39;s also look at the mean and median steps per day.
+## In order to do this, we will resummarize the data by date.
+
+Daily2 &lt;- summarise(group_by(clean_act, date), Total = sum(steps))
+
+##Calculate median and mean steps per day
+
+median(Daily2$Total)</code></pre>
+<pre><code>## [1] 10766.19</code></pre>
+<pre class="r"><code>mean(Daily2$Total)</code></pre>
+<pre><code>## [1] 10766.19</code></pre>
+<p>We can see that the median and average have not changed significantly. Had we taken a different approach and assumed that the missing values were zero, we would have seen the mean and median drop.</p>
+</div>
+<div id="differences-in-activity-patterns-on-weekdays-versus-weekends" class="section level2">
+<h2>Differences in activity patterns on weekdays versus weekends</h2>
+<p>It may be interesting to see the difference in activity patterns on weekdays as opposed to weekends.</p>
+<p>In order to do this, we need to find the days for the dates on our cleaned file.</p>
+<pre class="r"><code>clean_act$days &lt;- weekdays(as.Date(clean_act$date,&#39;%d-%m-%Y&#39;))</code></pre>
+<p>Now we create a variable to indicate whether it is a weekday or not.</p>
+<pre class="r"><code>clean_act$weekendyn &lt;- ifelse(clean_act$days==&quot;Saturday&quot; | clean_act$days==&quot;Sunday&quot;,&quot;Weekend&quot;,&quot;Weekday&quot;)</code></pre>
+<p>Now we will plot the data in two windows.</p>
+<pre class="r"><code>Bytime2 &lt;- summarise(group_by(clean_act, weekendyn, displaytime), Average = mean(steps))
+xyplot(Average~displaytime|weekendyn,
+       data=Bytime2,
+       type=&quot;l&quot;,
+       layout=c(1,2),
+     main = &quot;Comparison of weekend to weekday activity&quot;,
+     xlab = &quot;Time (24 hour clock)&quot;,
+     ylab = &quot;Steps (average)&quot;)</code></pre>
+<p><img src="Reproducible_Research_Assignment_1_files/figure-html/Plotting%20weekdays%20versus%20weekends-1.png" title="" alt="" width="672" /></p>
+<p>We can observe that, while there are similarities in the activity patterns, weekend activity is more evenly spread throughout the day, while during weekdays the activity tapers off more sharply after about 9am.</p>
+</div>
+</div>
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+$(document).ready(function () {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+});
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
